@@ -1,49 +1,61 @@
 # Coding Agent Instructions
 
-This repository is designed to be operated by Coding Agents such as Codex or Claude Code.
+This repository is a standalone Douyin / Xiaohongshu / Bilibili collector with optional Watchdog and Feishu Bitable integration.
 
-## Goal
+## Core rules
 
-Provide standalone collection for Douyin, Xiaohongshu and Bilibili without depending on Taiyi.
+1. This repository must remain independent from Taiyi.
+2. Run `python bootstrap.py --all` on first use, then `python cli.py doctor --json`.
+3. Never print, commit, upload, or expose cookies, tokens, passwords, app secrets, browser storage, or `.env` contents.
+4. Do not bypass CAPTCHA, login, access controls, rate limits, or platform restrictions. Ask the user to complete normal authorization when required.
+5. Prefer repository-local `.venv` and `.tools/`.
+6. Do not modify the user's Taiyi repository when working on this project.
 
-## First-run procedure
-
-1. Read this file and `README.md`.
-2. Run `python bootstrap.py --all`.
-3. Run `.venv/bin/python -m social_collector.cli doctor --json` on macOS/Linux, or `.venv\\Scripts\\python.exe -m social_collector.cli doctor --json` on Windows.
-4. If `doctor` reports missing system dependencies, install them using the machine's trusted package manager, then rerun steps 2-3:
-   - Node.js 20+ is needed for OpenCLI.
-   - FFmpeg is recommended for media merging performed by yt-dlp.
-5. If Node.js was installed after the first bootstrap, rerun `python bootstrap.py --opencli`.
-6. For Xiaohongshu and Douyin creator-list commands, run `opencli doctor`. The user must sign in to the platform using their normal browser and connect OpenCLI Browser Bridge when required.
-7. Never print, commit, upload, or expose cookie contents, tokens, passwords, or browser storage.
-8. Do not bypass CAPTCHA, login, access controls, rate limits, or platform restrictions. If authorization is required, ask the user to complete it normally.
-
-## Commands
+## Collector commands
 
 ```bash
-python cli.py doctor --json
 python cli.py collect "<content-url>"
 python cli.py download "<content-url>" --output downloads
-python cli.py user "<creator-id-or-profile-url>" --platform douyin --limit 20
-python cli.py user "<creator-id-or-profile-url>" --platform xiaohongshu --limit 20
-python cli.py user "<creator-id-or-profile-url>" --platform bilibili --limit 20
+python cli.py user "<creator>" --platform douyin --limit 20
 ```
 
-All command results are JSON. Exit codes:
+## Local Watchdog
+
+```bash
+python cli.py watch add "<creator>" --platform douyin --name "<name>"
+python cli.py watch list
+python cli.py watch run --source local
+python cli.py watch start --source local --interval 30m
+```
+
+First check establishes a baseline. Use `--include-existing` only when the user explicitly wants current historical items treated as new. Minimum watch interval is 60 seconds.
+
+## Feishu
+
+Secrets are environment variables: `FEISHU_APP_ID`, `FEISHU_APP_SECRET`. Optional: `FEISHU_BITABLE_APP_TOKEN`, `FEISHU_FOLDER_TOKEN`, `FEISHU_STATE_FILE`.
+
+```bash
+python cli.py feishu setup
+python cli.py feishu status
+python cli.py feishu add-monitor "<creator>" --platform xiaohongshu --name "<name>"
+```
+
+Setup creates/verifies `博主监控池` and `素材内容池`. It adds missing fields and reports type mismatches instead of destructively changing existing fields.
+
+When Feishu credentials exist, `--source auto` selects Feishu:
+
+```bash
+python cli.py watch run
+python cli.py watch start --interval 30m
+```
+
+Feishu mode fully collects newly discovered content, deduplicates by 内容ID, writes it to 素材内容池, and updates 最新发布ID / 最近检查时间 / 监控状态.
+
+## Exit codes
 
 - `0`: success
 - `2`: missing dependency
-- `3`: user authentication/browser session required
-- `4`: unsupported input or collector error
-- `5`: unexpected runtime failure
-
-## Cookie files
-
-When a platform needs the user's own session, prefer a Netscape-format cookie file outside Git. Supported environment variables:
-
-- `DOUYIN_COOKIE_FILE`
-- `BILIBILI_COOKIE_FILE`
-- `SOCIAL_COLLECTOR_COOKIE_FILE`
-
-The `.gitignore` already excludes common cookie locations.
+- `3`: normal user authentication/browser session required
+- `4`: unsupported input/configuration/collector error
+- `5`: unexpected runtime or monitoring failure
+- `130`: interrupted by user

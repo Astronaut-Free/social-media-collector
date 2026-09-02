@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "social-media-collector"
-version = "0.1.0"
-description = "Standalone Douyin, Xiaohongshu and Bilibili collectors extracted from Taiyi"
+version = "0.2.0"
+description = "Standalone Douyin, Xiaohongshu and Bilibili collectors with Watchdog and optional Feishu integration"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

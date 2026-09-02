@@ -6,6 +6,7 @@ cookies.json
 cookies/
 downloads/
 output/
+data/
 .DS_Store
 .vscode/
 .idea/
