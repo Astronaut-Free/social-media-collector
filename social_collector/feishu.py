@@ -11,6 +11,7 @@ import requests
 
 from .feishu_schema import CONTENT_FIELDS, CONTENT_TABLE_NAME, MONITOR_FIELDS, MONITOR_TABLE_NAME
 from .models import CollectorError, NoteType, Platform
+from .image_manifest import normalize_image_list
 
 BASE_URL = "https://open.feishu.cn/open-apis"
 
@@ -331,6 +332,10 @@ class FeishuIntegration:
             cover = str(meta.get("cover_url") or item.get("cover_url") or "").strip()
             if cover:
                 fields["封面链接"] = _url_cell(cover, "封面")
+            image_list = normalize_image_list(meta.get("image_list"))
+            if image_list:
+                fields["图片数量"] = len(image_list)
+                fields["图片列表JSON"] = json.dumps(image_list, ensure_ascii=False, separators=(",", ":"))
             if publish_ms is not None:
                 fields["素材发布时间"] = publish_ms
             numeric = {"视频时长": meta.get("video_duration"), "博主粉丝数": meta.get("follower_count"), "点赞数": meta.get("liked_count", item.get("digg_count")), "收藏数": meta.get("collected_count", item.get("collect_count")), "评论数": meta.get("comment_count", item.get("comment_count")), "分享数": meta.get("share_count", item.get("share_count")), "播放量/阅读量": meta.get("play_count", item.get("play_count"))}
