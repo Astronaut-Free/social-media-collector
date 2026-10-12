@@ -41,6 +41,8 @@ CONTENT_FIELDS: tuple[FieldSpec, ...] = (
     FieldSpec("内容全文", TEXT),
     FieldSpec("原始链接", URL),
     FieldSpec("封面链接", URL),
+    FieldSpec("图片数量", NUMBER),
+    FieldSpec("图片列表JSON", TEXT),
     FieldSpec("视频时长", NUMBER),
     FieldSpec("收藏时间", DATE),
     FieldSpec("博主粉丝数", NUMBER),
